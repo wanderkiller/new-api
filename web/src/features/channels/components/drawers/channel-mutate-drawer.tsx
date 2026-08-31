@@ -2539,6 +2539,32 @@ export function ChannelMutateDrawer({
                                     </FormItem>
                                   )}
                                 />
+                                <FormField
+                                  control={form.control}
+                                  name='vertex_gemini_openai_compat_enabled'
+                                  render={({ field }) => (
+                                    <FormItem className='flex items-center justify-between'>
+                                      <div className='space-y-0.5'>
+                                        <FormLabel>
+                                          {t(
+                                            'Use OpenAI-compatible Gemini endpoint'
+                                          )}
+                                        </FormLabel>
+                                        <FormDescription>
+                                          {t(
+                                            'Routes Gemini chat models through Vertex AI OpenAI compatibility to preserve thought signatures for multi-turn tool calls. Gemini-native features such as Google Search grounding are not applied; models using thinking suffixes stay on the native route.'
+                                          )}
+                                        </FormDescription>
+                                      </div>
+                                      <FormControl>
+                                        <Switch
+                                          checked={field.value}
+                                          onCheckedChange={field.onChange}
+                                        />
+                                      </FormControl>
+                                    </FormItem>
+                                  )}
+                                />
                                 {vertexKeyType === 'json' && (
                                   <FormItem>
                                     <FormLabel>

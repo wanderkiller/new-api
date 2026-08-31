@@ -124,9 +124,26 @@ func (a *Adaptor) Init(info *relaycommon.RelayInfo) {
 		// open source models
 		strings.Contains(info.UpstreamModelName, "-maas") {
 		a.RequestMode = RequestModeOpenSource
+	} else if info.ChannelOtherSettings.VertexGeminiOpenAICompatEnabled &&
+		isVertexGeminiOpenAICompatibleModel(info.UpstreamModelName) {
+		a.RequestMode = RequestModeOpenSource
 	} else {
 		a.RequestMode = RequestModeGemini
 	}
+}
+
+func isVertexGeminiModel(modelName string) bool {
+	modelName = strings.TrimPrefix(strings.ToLower(modelName), "google/")
+	return strings.HasPrefix(modelName, "gemini")
+}
+
+func isVertexGeminiOpenAICompatibleModel(modelName string) bool {
+	if !isVertexGeminiModel(modelName) || strings.Contains(modelName, "-thinking-") ||
+		strings.HasSuffix(modelName, "-thinking") || strings.HasSuffix(modelName, "-nothinking") {
+		return false
+	}
+	_, effort, hasEffortSuffix := reasoning.TrimEffortSuffix(modelName)
+	return !hasEffortSuffix || effort == ""
 }
 
 func (a *Adaptor) getRequestUrl(info *relaycommon.RelayInfo, modelName, suffix string) (string, error) {
@@ -305,6 +322,10 @@ func (a *Adaptor) ConvertOpenAIRequest(c *gin.Context, info *relaycommon.RelayIn
 		c.Set("request_model", request.Model)
 		return geminiRequest, nil
 	} else if a.RequestMode == RequestModeOpenSource {
+		if info.ChannelOtherSettings.VertexGeminiOpenAICompatEnabled &&
+			isVertexGeminiOpenAICompatibleModel(info.UpstreamModelName) {
+			request.Model = "google/" + strings.TrimPrefix(info.UpstreamModelName, "google/")
+		}
 		return request, nil
 	}
 	return nil, errors.New("unsupported request mode")

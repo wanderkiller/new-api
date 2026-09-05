@@ -125,7 +125,7 @@ func (a *Adaptor) Init(info *relaycommon.RelayInfo) {
 		strings.Contains(info.UpstreamModelName, "-maas") {
 		a.RequestMode = RequestModeOpenSource
 	} else if info.ChannelOtherSettings.VertexGeminiOpenAICompatEnabled &&
-		isVertexGeminiOpenAICompatibleModel(info.UpstreamModelName) {
+		isVertexGeminiOpenAICompatibleModel(info) {
 		a.RequestMode = RequestModeOpenSource
 	} else {
 		a.RequestMode = RequestModeGemini
@@ -137,13 +137,16 @@ func isVertexGeminiModel(modelName string) bool {
 	return strings.HasPrefix(modelName, "gemini")
 }
 
-func isVertexGeminiOpenAICompatibleModel(modelName string) bool {
-	if !isVertexGeminiModel(modelName) || strings.Contains(modelName, "-thinking-") ||
-		strings.HasSuffix(modelName, "-thinking") || strings.HasSuffix(modelName, "-nothinking") {
-		return false
-	}
-	_, effort, hasEffortSuffix := reasoning.TrimEffortSuffix(modelName)
-	return !hasEffortSuffix || effort == ""
+// isVertexGeminiOpenAICompatibleModel reports whether this Gemini request
+// should be rerouted through Vertex's OpenAI-compatible endpoint. Models
+// carrying a thinking/effort model-name modifier are excluded. As of the
+// rc.31 relay-conversion refactor, ApplyReasoningModelSuffix (relay entry
+// layer, runs before Adaptor.Init) already strips that modifier out of
+// UpstreamModelName and records it on info.ReasoningConversion instead — so
+// the modifier can no longer be detected by re-parsing the (now-clean) model
+// name here; check the carried state instead.
+func isVertexGeminiOpenAICompatibleModel(info *relaycommon.RelayInfo) bool {
+	return isVertexGeminiModel(info.UpstreamModelName) && info.ReasoningState() == nil
 }
 
 func (a *Adaptor) getRequestUrl(info *relaycommon.RelayInfo, modelName, suffix string) (string, error) {
@@ -323,7 +326,7 @@ func (a *Adaptor) ConvertOpenAIRequest(c *gin.Context, info *relaycommon.RelayIn
 		return geminiRequest, nil
 	} else if a.RequestMode == RequestModeOpenSource {
 		if info.ChannelOtherSettings.VertexGeminiOpenAICompatEnabled &&
-			isVertexGeminiOpenAICompatibleModel(info.UpstreamModelName) {
+			isVertexGeminiOpenAICompatibleModel(info) {
 			request.Model = "google/" + strings.TrimPrefix(info.UpstreamModelName, "google/")
 		}
 		return request, nil

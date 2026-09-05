@@ -16,17 +16,25 @@ import (
 )
 
 func TestAdaptorInitGeminiOpenAICompatibilityRouting(t *testing.T) {
+	// Since the rc.31 relay-conversion refactor, thinking/effort model-name
+	// modifiers are stripped by helper.ApplyReasoningModelSuffix (relay entry
+	// layer) before Adaptor.Init ever runs: it normalizes UpstreamModelName to
+	// the bare base and records the modifier on info.ReasoningConversion
+	// instead. So a "thinking suffix" case is simulated with the base model
+	// name plus a populated ReasoningConversion, not a suffixed model string.
+	budget := 1024
 	tests := []struct {
-		name        string
-		model       string
-		enabled     bool
-		requestMode int
+		name                string
+		model               string
+		enabled             bool
+		reasoningConversion *dto.ReasoningConversionState
+		requestMode         int
 	}{
 		{name: "Gemini defaults to native", model: "gemini-3.7-flash", requestMode: RequestModeGemini},
 		{name: "Gemini opt-in uses OpenAI compatibility", model: "gemini-3.7-flash", enabled: true, requestMode: RequestModeOpenSource},
 		{name: "Google-prefixed Gemini opt-in uses OpenAI compatibility", model: "google/gemini-3.7-flash", enabled: true, requestMode: RequestModeOpenSource},
-		{name: "Gemini thinking suffix stays native", model: "gemini-3.7-flash-thinking", enabled: true, requestMode: RequestModeGemini},
-		{name: "Gemini effort suffix stays native", model: "gemini-3.7-flash-high", enabled: true, requestMode: RequestModeGemini},
+		{name: "Gemini thinking modifier stays native", model: "gemini-3.7-flash", enabled: true, reasoningConversion: &dto.ReasoningConversionState{Mode: "enabled", BudgetTokens: &budget}, requestMode: RequestModeGemini},
+		{name: "Gemini effort modifier stays native", model: "gemini-3.7-flash", enabled: true, reasoningConversion: &dto.ReasoningConversionState{Effort: "high"}, requestMode: RequestModeGemini},
 		{name: "Imagen stays native", model: "imagen-4.0-generate-001", enabled: true, requestMode: RequestModeGemini},
 		{name: "Claude remains Claude", model: "claude-sonnet-4", enabled: true, requestMode: RequestModeClaude},
 		{name: "Llama remains OpenAI compatibility", model: "meta-llama-3-70b-instruct", enabled: true, requestMode: RequestModeOpenSource},
@@ -36,12 +44,15 @@ func TestAdaptorInitGeminiOpenAICompatibilityRouting(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			adaptor := &Adaptor{}
-			adaptor.Init(&relaycommon.RelayInfo{ChannelMeta: &relaycommon.ChannelMeta{
-				UpstreamModelName: tt.model,
-				ChannelOtherSettings: dto.ChannelOtherSettings{
-					VertexGeminiOpenAICompatEnabled: tt.enabled,
+			adaptor.Init(&relaycommon.RelayInfo{
+				ReasoningConversion: tt.reasoningConversion,
+				ChannelMeta: &relaycommon.ChannelMeta{
+					UpstreamModelName: tt.model,
+					ChannelOtherSettings: dto.ChannelOtherSettings{
+						VertexGeminiOpenAICompatEnabled: tt.enabled,
+					},
 				},
-			}})
+			})
 
 			assert.Equal(t, tt.requestMode, adaptor.RequestMode)
 		})

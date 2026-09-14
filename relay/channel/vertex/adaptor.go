@@ -18,7 +18,6 @@ import (
 	"github.com/QuantumNous/new-api/relaykit/types"
 	"github.com/QuantumNous/new-api/service"
 	"github.com/QuantumNous/new-api/setting/model_setting"
-	"github.com/QuantumNous/new-api/setting/reasoning"
 
 	"github.com/gin-gonic/gin"
 	"github.com/samber/lo"
@@ -56,15 +55,16 @@ type Adaptor struct {
 }
 
 func (a *Adaptor) ConvertGeminiRequest(c *gin.Context, info *relaycommon.RelayInfo, request *dto.GeminiChatRequest) (any, error) {
-	// Vertex AI does not support functionResponse.id; keep it stripped here for consistency.
+	// Vertex AI's generateContent schema does not expose the Gemini API's
+	// function-call identity fields. Strip both sides at this provider boundary.
 	if model_setting.GetGeminiSettings().RemoveFunctionResponseIdEnabled {
-		removeFunctionResponseID(request)
+		removeFunctionCallIDs(request)
 	}
 	geminiAdaptor := gemini.Adaptor{}
 	return geminiAdaptor.ConvertGeminiRequest(c, info, request)
 }
 
-func removeFunctionResponseID(request *dto.GeminiChatRequest) {
+func removeFunctionCallIDs(request *dto.GeminiChatRequest) {
 	if request == nil {
 		return
 	}
@@ -76,10 +76,10 @@ func removeFunctionResponseID(request *dto.GeminiChatRequest) {
 			}
 			for j := range request.Contents[i].Parts {
 				part := &request.Contents[i].Parts[j]
-				if part.FunctionResponse == nil {
-					continue
+				if part.FunctionCall != nil {
+					part.FunctionCall.ID = ""
 				}
-				if len(part.FunctionResponse.ID) > 0 {
+				if part.FunctionResponse != nil && len(part.FunctionResponse.ID) > 0 {
 					part.FunctionResponse.ID = nil
 				}
 			}
@@ -88,12 +88,16 @@ func removeFunctionResponseID(request *dto.GeminiChatRequest) {
 
 	if len(request.Requests) > 0 {
 		for i := range request.Requests {
-			removeFunctionResponseID(&request.Requests[i])
+			removeFunctionCallIDs(&request.Requests[i])
 		}
 	}
 }
 
 func (a *Adaptor) ConvertClaudeRequest(c *gin.Context, info *relaycommon.RelayInfo, request *dto.ClaudeRequest) (any, error) {
+	claudeAdaptor := claude.Adaptor{}
+	if _, err := claudeAdaptor.ConvertClaudeRequest(c, info, request); err != nil {
+		return nil, err
+	}
 	if v, ok := claudeModelMap[info.UpstreamModelName]; ok {
 		c.Set("request_model", v)
 	} else {
@@ -120,9 +124,29 @@ func (a *Adaptor) Init(info *relaycommon.RelayInfo) {
 		// open source models
 		strings.Contains(info.UpstreamModelName, "-maas") {
 		a.RequestMode = RequestModeOpenSource
+	} else if info.ChannelOtherSettings.VertexGeminiOpenAICompatEnabled &&
+		isVertexGeminiOpenAICompatibleModel(info) {
+		a.RequestMode = RequestModeOpenSource
 	} else {
 		a.RequestMode = RequestModeGemini
 	}
+}
+
+func isVertexGeminiModel(modelName string) bool {
+	modelName = strings.TrimPrefix(strings.ToLower(modelName), "google/")
+	return strings.HasPrefix(modelName, "gemini")
+}
+
+// isVertexGeminiOpenAICompatibleModel reports whether this Gemini request
+// should be rerouted through Vertex's OpenAI-compatible endpoint. Models
+// carrying a thinking/effort model-name modifier are excluded. As of the
+// rc.31 relay-conversion refactor, ApplyReasoningModelSuffix (relay entry
+// layer, runs before Adaptor.Init) already strips that modifier out of
+// UpstreamModelName and records it on info.ReasoningConversion instead — so
+// the modifier can no longer be detected by re-parsing the (now-clean) model
+// name here; check the carried state instead.
+func isVertexGeminiOpenAICompatibleModel(info *relaycommon.RelayInfo) bool {
+	return isVertexGeminiModel(info.UpstreamModelName) && info.ReasoningState() == nil
 }
 
 func (a *Adaptor) getRequestUrl(info *relaycommon.RelayInfo, modelName, suffix string) (string, error) {
@@ -170,21 +194,6 @@ func (a *Adaptor) getRequestUrl(info *relaycommon.RelayInfo, modelName, suffix s
 func (a *Adaptor) GetRequestURL(info *relaycommon.RelayInfo) (string, error) {
 	suffix := ""
 	if a.RequestMode == RequestModeGemini {
-		if model_setting.GetGeminiSettings().ThinkingAdapterEnabled &&
-			!model_setting.ShouldPreserveThinkingSuffix(info.OriginModelName) {
-			// 新增逻辑：处理 -thinking-<budget> 格式
-			if strings.Contains(info.UpstreamModelName, "-thinking-") {
-				parts := strings.Split(info.UpstreamModelName, "-thinking-")
-				info.UpstreamModelName = parts[0]
-			} else if strings.HasSuffix(info.UpstreamModelName, "-thinking") { // 旧的适配
-				info.UpstreamModelName = strings.TrimSuffix(info.UpstreamModelName, "-thinking")
-			} else if strings.HasSuffix(info.UpstreamModelName, "-nothinking") {
-				info.UpstreamModelName = strings.TrimSuffix(info.UpstreamModelName, "-nothinking")
-			} else if baseModel, level, ok := reasoning.TrimEffortSuffix(info.UpstreamModelName); ok && level != "" {
-				info.UpstreamModelName = baseModel
-			}
-		}
-
 		if info.IsStream {
 			suffix = "streamGenerateContent?alt=sse"
 		} else {
@@ -310,9 +319,16 @@ func (a *Adaptor) ConvertOpenAIRequest(c *gin.Context, info *relaycommon.RelayIn
 		if !ok {
 			return nil, fmt.Errorf("expected Gemini generateContent request, got %T", result.Value)
 		}
+		if model_setting.GetGeminiSettings().RemoveFunctionResponseIdEnabled {
+			removeFunctionCallIDs(geminiRequest)
+		}
 		c.Set("request_model", request.Model)
 		return geminiRequest, nil
 	} else if a.RequestMode == RequestModeOpenSource {
+		if info.ChannelOtherSettings.VertexGeminiOpenAICompatEnabled &&
+			isVertexGeminiOpenAICompatibleModel(info) {
+			request.Model = "google/" + strings.TrimPrefix(info.UpstreamModelName, "google/")
+		}
 		return request, nil
 	}
 	return nil, errors.New("unsupported request mode")

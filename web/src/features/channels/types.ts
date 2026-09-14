@@ -80,6 +80,7 @@ export type Channel = z.infer<typeof channelSchema>
 // ============================================================================
 
 export interface ChannelSettings {
+  task_plugin_key?: string
   force_format?: boolean
   thinking_to_content?: boolean
   proxy?: string
@@ -93,6 +94,7 @@ export interface ChannelSettings {
 export interface ChannelOtherSettings {
   azure_responses_version?: string
   vertex_key_type?: 'json' | 'api_key'
+  vertex_gemini_openai_compat_enabled?: boolean
   openrouter_enterprise?: boolean
   aws_key_type?: 'ak_sk' | 'api_key'
   allow_service_tier?: boolean

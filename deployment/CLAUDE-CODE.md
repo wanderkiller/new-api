@@ -23,3 +23,8 @@ allow both aliases. Claude Code does not automatically load `.env` files.
 New API forwards the Messages protocol to Merge's native Anthropic endpoint
 with the full mapped model ID. Channels 1 and 5 are enabled; channel 7 awaits
 Anthropic access. Four production Claude Code coding workflows passed.
+
+Budget failover is enabled for both aliases: the session prefers its current
+channel but retries on another enabled channel for HTTP 402. Verified using
+actually depleted channel 1 and successful channel 5, including history
+replay and official Claude Code workflows. Subsequent turns use channel 5.

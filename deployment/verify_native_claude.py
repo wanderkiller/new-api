@@ -1,11 +1,12 @@
 import argparse,json,subprocess,requests,concurrent.futures
-p=argparse.ArgumentParser();p.add_argument('--port',type=int,default=13900);p.add_argument('--database',default='new_api_claude_check');p.add_argument('--channels',default='1,5');args=p.parse_args()
+p=argparse.ArgumentParser();p.add_argument('--port',type=int,default=13900);p.add_argument('--database',default='new_api_claude_check');p.add_argument('--channels',default='1,5');p.add_argument('--session-id');args=p.parse_args()
 key=subprocess.check_output(['sudo','-n','docker','exec','new-api-postgres','psql','-U','new_api','-d',args.database,'-Atc','SELECT key FROM tokens WHERE id=2 AND status=1;'],text=True).strip();assert key
 
 def run(pair):
  cid,model=pair;result={'channel':cid,'model':model,'protocol':'native_anthropic'}
  headers={'Authorization':'Bearer sk-'+key+(f'-{cid}' if cid else ''),'anthropic-version':'2023-06-01','anthropic-beta':'claude-code-20250219','User-Agent':'claude-code/native-protocol-test'}
  body={'model':model,'max_tokens':4096,'stream':True,'thinking':{'type':'adaptive'},'output_config':{'effort':'medium'},'system':[{'type':'text','text':'You are a coding assistant. Use tools to inspect code before giving a final answer.','cache_control':{'type':'ephemeral'}}],'messages':[{'role':'user','content':'Call inspect_code with this Python code: def add(a,b): return a+b. Do not claim you inspected it without calling the tool. After the tool returns valid=true, reply exactly CODE_OK.'}],'tools':[{'name':'inspect_code','description':'Inspect Python addition code for correctness.','input_schema':{'type':'object','properties':{'code':{'type':'string'}},'required':['code']},'cache_control':{'type':'ephemeral'}}]}
+ if args.session_id:body['metadata']={'user_id':args.session_id}
  def stream(b):
   blocks={};partial={};text='';events=[];reason=None;served=None;usage={}
   with requests.post(f'http://127.0.0.1:{args.port}/v1/messages',headers=headers,json=b,stream=True,timeout=120) as r:

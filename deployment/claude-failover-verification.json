@@ -1,0 +1,1384 @@
+{
+  "verified_at": "2026-10-01T08:28:29.693847+00:00",
+  "reported_request_id": "202610010819319656573138268d9d6fCD50OOG",
+  "cause": "Built-in Claude CLI affinity rule has skip_retry_on_failure=true and no explicit session_mode, resulting in strict mode when metadata.user_id exists. Strict session mode stops before global 402 retry rules.",
+  "configuration_fix": {
+    "option": "channel_affinity_setting.rules",
+    "prepended_rule": "merge claude failover",
+    "models": [
+      "claude-sonnet",
+      "claude-opus"
+    ],
+    "session_mode": "prefer",
+    "skip_retry_on_failure": false,
+    "original_default_rules_preserved": true,
+    "headers_preserved": true,
+    "switch_on_success": true
+  },
+  "backup": "/opt/new-api/backups/new-api-postgres-20261001T082437Z.dump",
+  "before_reproduction": [
+    {
+      "has_session_metadata": true,
+      "status": 402,
+      "model": null,
+      "context_preserved": false,
+      "error": {
+        "type": "budget_exceeded",
+        "message": "Credit balance depleted. Add credits to continue. (request id: 202610010823220606147198268d9d6psoHQcmJ)"
+      },
+      "request_id": null
+    },
+    {
+      "has_session_metadata": false,
+      "status": 200,
+      "model": "anthropic/claude-sonnet-5-5",
+      "context_preserved": true,
+      "error": null,
+      "request_id": "99d63eb3-dbae-43b8-9356-b1705508c96b"
+    }
+  ],
+  "after_context_replay": [
+    {
+      "model_alias": "claude-sonnet",
+      "has_session_metadata": true,
+      "status": 200,
+      "served_model": "anthropic/claude-sonnet-5-5",
+      "context_preserved": true,
+      "error": null,
+      "request_id": "0620fe84-c6da-4a5b-8cc3-e3779e12b4ab"
+    },
+    {
+      "model_alias": "claude-opus",
+      "has_session_metadata": true,
+      "status": 200,
+      "served_model": "anthropic/claude-opus-5-5",
+      "context_preserved": true,
+      "error": null,
+      "request_id": "982da091-290c-4009-9997-c66d28911724"
+    }
+  ],
+  "native_tool_replay": [
+    {
+      "channel": 0,
+      "model": "claude-sonnet",
+      "protocol": "native_anthropic",
+      "served_model": "anthropic/claude-sonnet-5-5",
+      "tool_call_count": 1,
+      "signed_thinking_blocks": 0,
+      "native_tool_replay_ok": true,
+      "sse_events": [
+        "content_block_delta",
+        "content_block_start",
+        "content_block_stop",
+        "message_delta",
+        "message_start",
+        "message_stop"
+      ],
+      "usage_fields": [
+        "cache_creation_input_tokens",
+        "cache_read_input_tokens",
+        "input_tokens",
+        "output_tokens"
+      ],
+      "success": true
+    },
+    {
+      "channel": 0,
+      "model": "claude-opus",
+      "protocol": "native_anthropic",
+      "served_model": "anthropic/claude-opus-5-5",
+      "tool_call_count": 1,
+      "signed_thinking_blocks": 0,
+      "native_tool_replay_ok": true,
+      "sse_events": [
+        "content_block_delta",
+        "content_block_start",
+        "content_block_stop",
+        "message_delta",
+        "message_start",
+        "message_stop"
+      ],
+      "usage_fields": [
+        "cache_creation_input_tokens",
+        "cache_read_input_tokens",
+        "input_tokens",
+        "output_tokens"
+      ],
+      "success": true
+    }
+  ],
+  "official_claude_code": [
+    {
+      "channel": 0,
+      "model": "claude-opus",
+      "client": "Claude Code 2.1.286",
+      "exit_code": 0,
+      "subtype": "success",
+      "is_error": false,
+      "tools": [
+        "Read",
+        "Edit",
+        "Bash"
+      ],
+      "turns": 4,
+      "permission_denial_count": 0,
+      "partial_stream_events": 23,
+      "success": true,
+      "edited_code_test_passed": true
+    },
+    {
+      "channel": 0,
+      "model": "claude-sonnet",
+      "client": "Claude Code 2.1.286",
+      "exit_code": 0,
+      "subtype": "success",
+      "is_error": false,
+      "tools": [
+        "Read",
+        "Edit",
+        "Bash"
+      ],
+      "turns": 4,
+      "permission_denial_count": 0,
+      "partial_stream_events": 26,
+      "success": true,
+      "edited_code_test_passed": true
+    }
+  ],
+  "production_routing_audit": [
+    {
+      "id": 2301,
+      "channel_id": 5,
+      "model_name": "claude-sonnet",
+      "used_channels": [
+        "1",
+        "5"
+      ],
+      "policy": [
+        {
+          "rule": "merge claude failover",
+          "attempt": 0,
+          "decision": {
+            "action": "match",
+            "reason": "session_rule_matched",
+            "source": "session_rule"
+          },
+          "elapsed_ms": 0
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 1,
+          "decision": {
+            "action": "attempt",
+            "reason": "channel_selected",
+            "source": "routing"
+          },
+          "channel_id": 1,
+          "elapsed_ms": 4
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "status": 402,
+          "attempt": 1,
+          "decision": {
+            "action": "failure",
+            "reason": "upstream_failure",
+            "source": "upstream"
+          },
+          "channel_id": 1,
+          "elapsed_ms": 1165,
+          "error_code": "budget_exceeded",
+          "error_source": "upstream"
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "health": "unchanged",
+          "status": 402,
+          "attempt": 1,
+          "decision": {
+            "action": "retry",
+            "reason": "retry_status_matched",
+            "source": "global"
+          },
+          "channel_id": 1,
+          "elapsed_ms": 1165,
+          "error_code": "budget_exceeded",
+          "error_source": "upstream"
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 2,
+          "decision": {
+            "action": "attempt",
+            "reason": "channel_selected",
+            "source": "routing"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 1167
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 2,
+          "decision": {
+            "action": "success",
+            "reason": "request_completed",
+            "source": "upstream"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 2531
+        }
+      ]
+    },
+    {
+      "id": 2302,
+      "channel_id": 5,
+      "model_name": "claude-sonnet",
+      "used_channels": [
+        "1",
+        "5"
+      ],
+      "policy": [
+        {
+          "rule": "merge claude failover",
+          "attempt": 0,
+          "decision": {
+            "action": "match",
+            "reason": "session_rule_matched",
+            "source": "session_rule"
+          },
+          "elapsed_ms": 0
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 1,
+          "decision": {
+            "action": "attempt",
+            "reason": "channel_selected",
+            "source": "routing"
+          },
+          "channel_id": 1,
+          "elapsed_ms": 5
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "status": 402,
+          "attempt": 1,
+          "decision": {
+            "action": "failure",
+            "reason": "upstream_failure",
+            "source": "upstream"
+          },
+          "channel_id": 1,
+          "elapsed_ms": 1392,
+          "error_code": "budget_exceeded",
+          "error_source": "upstream"
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "health": "unchanged",
+          "status": 402,
+          "attempt": 1,
+          "decision": {
+            "action": "retry",
+            "reason": "retry_status_matched",
+            "source": "global"
+          },
+          "channel_id": 1,
+          "elapsed_ms": 1392,
+          "error_code": "budget_exceeded",
+          "error_source": "upstream"
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 2,
+          "decision": {
+            "action": "attempt",
+            "reason": "channel_selected",
+            "source": "routing"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 1394
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 2,
+          "decision": {
+            "action": "success",
+            "reason": "request_completed",
+            "source": "upstream"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 3890
+        }
+      ]
+    },
+    {
+      "id": 2303,
+      "channel_id": 5,
+      "model_name": "claude-opus",
+      "used_channels": [
+        "1",
+        "5"
+      ],
+      "policy": [
+        {
+          "rule": "merge claude failover",
+          "attempt": 0,
+          "decision": {
+            "action": "match",
+            "reason": "session_rule_matched",
+            "source": "session_rule"
+          },
+          "elapsed_ms": 0
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 1,
+          "decision": {
+            "action": "attempt",
+            "reason": "channel_selected",
+            "source": "routing"
+          },
+          "channel_id": 1,
+          "elapsed_ms": 5
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "status": 402,
+          "attempt": 1,
+          "decision": {
+            "action": "failure",
+            "reason": "upstream_failure",
+            "source": "upstream"
+          },
+          "channel_id": 1,
+          "elapsed_ms": 1422,
+          "error_code": "budget_exceeded",
+          "error_source": "upstream"
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "health": "unchanged",
+          "status": 402,
+          "attempt": 1,
+          "decision": {
+            "action": "retry",
+            "reason": "retry_status_matched",
+            "source": "global"
+          },
+          "channel_id": 1,
+          "elapsed_ms": 1422,
+          "error_code": "budget_exceeded",
+          "error_source": "upstream"
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 2,
+          "decision": {
+            "action": "attempt",
+            "reason": "channel_selected",
+            "source": "routing"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 1424
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 2,
+          "decision": {
+            "action": "success",
+            "reason": "request_completed",
+            "source": "upstream"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 4246
+        }
+      ]
+    },
+    {
+      "id": 2304,
+      "channel_id": 5,
+      "model_name": "claude-sonnet",
+      "used_channels": [
+        "5"
+      ],
+      "policy": [
+        {
+          "rule": "merge claude failover",
+          "attempt": 0,
+          "decision": {
+            "action": "match",
+            "reason": "session_rule_matched",
+            "source": "session_rule"
+          },
+          "elapsed_ms": 0
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 1,
+          "decision": {
+            "action": "attempt",
+            "reason": "channel_selected",
+            "source": "routing"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 1
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 1,
+          "decision": {
+            "action": "success",
+            "reason": "request_completed",
+            "source": "upstream"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 1142
+        }
+      ]
+    },
+    {
+      "id": 2305,
+      "channel_id": 5,
+      "model_name": "claude-opus",
+      "used_channels": [
+        "1",
+        "5"
+      ],
+      "policy": [
+        {
+          "rule": "merge claude failover",
+          "attempt": 0,
+          "decision": {
+            "action": "match",
+            "reason": "session_rule_matched",
+            "source": "session_rule"
+          },
+          "elapsed_ms": 0
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 1,
+          "decision": {
+            "action": "attempt",
+            "reason": "channel_selected",
+            "source": "routing"
+          },
+          "channel_id": 1,
+          "elapsed_ms": 6
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "status": 402,
+          "attempt": 1,
+          "decision": {
+            "action": "failure",
+            "reason": "upstream_failure",
+            "source": "upstream"
+          },
+          "channel_id": 1,
+          "elapsed_ms": 1142,
+          "error_code": "budget_exceeded",
+          "error_source": "upstream"
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "health": "unchanged",
+          "status": 402,
+          "attempt": 1,
+          "decision": {
+            "action": "retry",
+            "reason": "retry_status_matched",
+            "source": "global"
+          },
+          "channel_id": 1,
+          "elapsed_ms": 1142,
+          "error_code": "budget_exceeded",
+          "error_source": "upstream"
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 2,
+          "decision": {
+            "action": "attempt",
+            "reason": "channel_selected",
+            "source": "routing"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 1143
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 2,
+          "decision": {
+            "action": "success",
+            "reason": "request_completed",
+            "source": "upstream"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 4539
+        }
+      ]
+    },
+    {
+      "id": 2306,
+      "channel_id": 5,
+      "model_name": "claude-opus",
+      "used_channels": [
+        "5"
+      ],
+      "policy": [
+        {
+          "rule": "merge claude failover",
+          "attempt": 0,
+          "decision": {
+            "action": "match",
+            "reason": "session_rule_matched",
+            "source": "session_rule"
+          },
+          "elapsed_ms": 0
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 1,
+          "decision": {
+            "action": "attempt",
+            "reason": "channel_selected",
+            "source": "routing"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 2
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 1,
+          "decision": {
+            "action": "success",
+            "reason": "request_completed",
+            "source": "upstream"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 1887
+        }
+      ]
+    },
+    {
+      "id": 2307,
+      "channel_id": 5,
+      "model_name": "claude-opus",
+      "used_channels": [
+        "1",
+        "5"
+      ],
+      "policy": [
+        {
+          "rule": "merge claude failover",
+          "attempt": 0,
+          "decision": {
+            "action": "match",
+            "reason": "session_rule_matched",
+            "source": "session_rule"
+          },
+          "elapsed_ms": 0
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 1,
+          "decision": {
+            "action": "attempt",
+            "reason": "channel_selected",
+            "source": "routing"
+          },
+          "channel_id": 1,
+          "elapsed_ms": 3
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "status": 402,
+          "attempt": 1,
+          "decision": {
+            "action": "failure",
+            "reason": "upstream_failure",
+            "source": "upstream"
+          },
+          "channel_id": 1,
+          "elapsed_ms": 410,
+          "error_code": "budget_exceeded",
+          "error_source": "upstream"
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "health": "unchanged",
+          "status": 402,
+          "attempt": 1,
+          "decision": {
+            "action": "retry",
+            "reason": "retry_status_matched",
+            "source": "global"
+          },
+          "channel_id": 1,
+          "elapsed_ms": 410,
+          "error_code": "budget_exceeded",
+          "error_source": "upstream"
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 2,
+          "decision": {
+            "action": "attempt",
+            "reason": "channel_selected",
+            "source": "routing"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 412
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 2,
+          "decision": {
+            "action": "success",
+            "reason": "request_completed",
+            "source": "upstream"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 3365
+        }
+      ]
+    },
+    {
+      "id": 2308,
+      "channel_id": 5,
+      "model_name": "claude-sonnet",
+      "used_channels": [
+        "1",
+        "5"
+      ],
+      "policy": [
+        {
+          "rule": "merge claude failover",
+          "attempt": 0,
+          "decision": {
+            "action": "match",
+            "reason": "session_rule_matched",
+            "source": "session_rule"
+          },
+          "elapsed_ms": 0
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 1,
+          "decision": {
+            "action": "attempt",
+            "reason": "channel_selected",
+            "source": "routing"
+          },
+          "channel_id": 1,
+          "elapsed_ms": 4
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "status": 402,
+          "attempt": 1,
+          "decision": {
+            "action": "failure",
+            "reason": "upstream_failure",
+            "source": "upstream"
+          },
+          "channel_id": 1,
+          "elapsed_ms": 1113,
+          "error_code": "budget_exceeded",
+          "error_source": "upstream"
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "health": "unchanged",
+          "status": 402,
+          "attempt": 1,
+          "decision": {
+            "action": "retry",
+            "reason": "retry_status_matched",
+            "source": "global"
+          },
+          "channel_id": 1,
+          "elapsed_ms": 1113,
+          "error_code": "budget_exceeded",
+          "error_source": "upstream"
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 2,
+          "decision": {
+            "action": "attempt",
+            "reason": "channel_selected",
+            "source": "routing"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 1115
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 2,
+          "decision": {
+            "action": "success",
+            "reason": "request_completed",
+            "source": "upstream"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 6134
+        }
+      ]
+    },
+    {
+      "id": 2309,
+      "channel_id": 5,
+      "model_name": "claude-sonnet",
+      "used_channels": [
+        "5"
+      ],
+      "policy": [
+        {
+          "rule": "merge claude failover",
+          "attempt": 0,
+          "decision": {
+            "action": "match",
+            "reason": "session_rule_matched",
+            "source": "session_rule"
+          },
+          "elapsed_ms": 0
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 1,
+          "decision": {
+            "action": "attempt",
+            "reason": "channel_selected",
+            "source": "routing"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 3
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 1,
+          "decision": {
+            "action": "success",
+            "reason": "request_completed",
+            "source": "upstream"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 1762
+        }
+      ]
+    },
+    {
+      "id": 2310,
+      "channel_id": 5,
+      "model_name": "claude-opus",
+      "used_channels": [
+        "5"
+      ],
+      "policy": [
+        {
+          "rule": "merge claude failover",
+          "attempt": 0,
+          "decision": {
+            "action": "match",
+            "reason": "session_rule_matched",
+            "source": "session_rule"
+          },
+          "elapsed_ms": 0
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 1,
+          "decision": {
+            "action": "attempt",
+            "reason": "channel_selected",
+            "source": "routing"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 2
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 1,
+          "decision": {
+            "action": "success",
+            "reason": "request_completed",
+            "source": "upstream"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 5084
+        }
+      ]
+    },
+    {
+      "id": 2311,
+      "channel_id": 5,
+      "model_name": "claude-sonnet",
+      "used_channels": [
+        "5"
+      ],
+      "policy": [
+        {
+          "rule": "merge claude failover",
+          "attempt": 0,
+          "decision": {
+            "action": "match",
+            "reason": "session_rule_matched",
+            "source": "session_rule"
+          },
+          "elapsed_ms": 0
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 1,
+          "decision": {
+            "action": "attempt",
+            "reason": "channel_selected",
+            "source": "routing"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 3
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 1,
+          "decision": {
+            "action": "success",
+            "reason": "request_completed",
+            "source": "upstream"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 3944
+        }
+      ]
+    },
+    {
+      "id": 2312,
+      "channel_id": 5,
+      "model_name": "claude-sonnet",
+      "used_channels": [
+        "1",
+        "5"
+      ],
+      "policy": [
+        {
+          "rule": "merge claude failover",
+          "attempt": 0,
+          "decision": {
+            "action": "match",
+            "reason": "session_rule_matched",
+            "source": "session_rule"
+          },
+          "elapsed_ms": 0
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 1,
+          "decision": {
+            "action": "attempt",
+            "reason": "channel_selected",
+            "source": "routing"
+          },
+          "channel_id": 1,
+          "elapsed_ms": 16
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "status": 402,
+          "attempt": 1,
+          "decision": {
+            "action": "failure",
+            "reason": "upstream_failure",
+            "source": "upstream"
+          },
+          "channel_id": 1,
+          "elapsed_ms": 444,
+          "error_code": "budget_exceeded",
+          "error_source": "upstream"
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "health": "unchanged",
+          "status": 402,
+          "attempt": 1,
+          "decision": {
+            "action": "retry",
+            "reason": "retry_status_matched",
+            "source": "global"
+          },
+          "channel_id": 1,
+          "elapsed_ms": 444,
+          "error_code": "budget_exceeded",
+          "error_source": "upstream"
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 2,
+          "decision": {
+            "action": "attempt",
+            "reason": "channel_selected",
+            "source": "routing"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 446
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 2,
+          "decision": {
+            "action": "success",
+            "reason": "request_completed",
+            "source": "upstream"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 3018
+        }
+      ]
+    },
+    {
+      "id": 2313,
+      "channel_id": 5,
+      "model_name": "claude-opus",
+      "used_channels": [
+        "5"
+      ],
+      "policy": [
+        {
+          "rule": "merge claude failover",
+          "attempt": 0,
+          "decision": {
+            "action": "match",
+            "reason": "session_rule_matched",
+            "source": "session_rule"
+          },
+          "elapsed_ms": 0
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 1,
+          "decision": {
+            "action": "attempt",
+            "reason": "channel_selected",
+            "source": "routing"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 2
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 1,
+          "decision": {
+            "action": "success",
+            "reason": "request_completed",
+            "source": "upstream"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 1467
+        }
+      ]
+    },
+    {
+      "id": 2314,
+      "channel_id": 5,
+      "model_name": "claude-sonnet",
+      "used_channels": [
+        "5"
+      ],
+      "policy": [
+        {
+          "rule": "merge claude failover",
+          "attempt": 0,
+          "decision": {
+            "action": "match",
+            "reason": "session_rule_matched",
+            "source": "session_rule"
+          },
+          "elapsed_ms": 0
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 1,
+          "decision": {
+            "action": "attempt",
+            "reason": "channel_selected",
+            "source": "routing"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 14
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 1,
+          "decision": {
+            "action": "success",
+            "reason": "request_completed",
+            "source": "upstream"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 3788
+        }
+      ]
+    },
+    {
+      "id": 2315,
+      "channel_id": 5,
+      "model_name": "claude-sonnet",
+      "used_channels": [
+        "5"
+      ],
+      "policy": [
+        {
+          "rule": "merge claude failover",
+          "attempt": 0,
+          "decision": {
+            "action": "match",
+            "reason": "session_rule_matched",
+            "source": "session_rule"
+          },
+          "elapsed_ms": 0
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 1,
+          "decision": {
+            "action": "attempt",
+            "reason": "channel_selected",
+            "source": "routing"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 3
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 1,
+          "decision": {
+            "action": "success",
+            "reason": "request_completed",
+            "source": "upstream"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 1496
+        }
+      ]
+    },
+    {
+      "id": 2316,
+      "channel_id": 5,
+      "model_name": "claude-sonnet",
+      "used_channels": [
+        "1",
+        "5"
+      ],
+      "policy": [
+        {
+          "rule": "merge claude failover",
+          "attempt": 0,
+          "decision": {
+            "action": "match",
+            "reason": "session_rule_matched",
+            "source": "session_rule"
+          },
+          "elapsed_ms": 0
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 1,
+          "decision": {
+            "action": "attempt",
+            "reason": "channel_selected",
+            "source": "routing"
+          },
+          "channel_id": 1,
+          "elapsed_ms": 35
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "status": 402,
+          "attempt": 1,
+          "decision": {
+            "action": "failure",
+            "reason": "upstream_failure",
+            "source": "upstream"
+          },
+          "channel_id": 1,
+          "elapsed_ms": 472,
+          "error_code": "budget_exceeded",
+          "error_source": "upstream"
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "health": "unchanged",
+          "status": 402,
+          "attempt": 1,
+          "decision": {
+            "action": "retry",
+            "reason": "retry_status_matched",
+            "source": "global"
+          },
+          "channel_id": 1,
+          "elapsed_ms": 472,
+          "error_code": "budget_exceeded",
+          "error_source": "upstream"
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 2,
+          "decision": {
+            "action": "attempt",
+            "reason": "channel_selected",
+            "source": "routing"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 474
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 2,
+          "decision": {
+            "action": "success",
+            "reason": "request_completed",
+            "source": "upstream"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 7420
+        }
+      ]
+    },
+    {
+      "id": 2317,
+      "channel_id": 5,
+      "model_name": "claude-sonnet",
+      "used_channels": [
+        "5"
+      ],
+      "policy": [
+        {
+          "rule": "merge claude failover",
+          "attempt": 0,
+          "decision": {
+            "action": "match",
+            "reason": "session_rule_matched",
+            "source": "session_rule"
+          },
+          "elapsed_ms": 0
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 1,
+          "decision": {
+            "action": "attempt",
+            "reason": "channel_selected",
+            "source": "routing"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 28
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 1,
+          "decision": {
+            "action": "success",
+            "reason": "request_completed",
+            "source": "upstream"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 4006
+        }
+      ]
+    },
+    {
+      "id": 2318,
+      "channel_id": 5,
+      "model_name": "claude-sonnet",
+      "used_channels": [
+        "5"
+      ],
+      "policy": [
+        {
+          "rule": "merge claude failover",
+          "attempt": 0,
+          "decision": {
+            "action": "match",
+            "reason": "session_rule_matched",
+            "source": "session_rule"
+          },
+          "elapsed_ms": 0
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 1,
+          "decision": {
+            "action": "attempt",
+            "reason": "channel_selected",
+            "source": "routing"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 32
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 1,
+          "decision": {
+            "action": "success",
+            "reason": "request_completed",
+            "source": "upstream"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 16952
+        }
+      ]
+    },
+    {
+      "id": 2319,
+      "channel_id": 5,
+      "model_name": "claude-sonnet",
+      "used_channels": [
+        "5"
+      ],
+      "policy": [
+        {
+          "rule": "merge claude failover",
+          "attempt": 0,
+          "decision": {
+            "action": "match",
+            "reason": "session_rule_matched",
+            "source": "session_rule"
+          },
+          "elapsed_ms": 0
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 1,
+          "decision": {
+            "action": "attempt",
+            "reason": "channel_selected",
+            "source": "routing"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 28
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 1,
+          "decision": {
+            "action": "success",
+            "reason": "request_completed",
+            "source": "upstream"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 2690
+        }
+      ]
+    },
+    {
+      "id": 2320,
+      "channel_id": 5,
+      "model_name": "claude-sonnet",
+      "used_channels": [
+        "5"
+      ],
+      "policy": [
+        {
+          "rule": "merge claude failover",
+          "attempt": 0,
+          "decision": {
+            "action": "match",
+            "reason": "session_rule_matched",
+            "source": "session_rule"
+          },
+          "elapsed_ms": 0
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 1,
+          "decision": {
+            "action": "attempt",
+            "reason": "channel_selected",
+            "source": "routing"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 35
+        },
+        {
+          "rule": "merge claude failover",
+          "group": "default",
+          "attempt": 1,
+          "decision": {
+            "action": "success",
+            "reason": "request_completed",
+            "source": "upstream"
+          },
+          "channel_id": 5,
+          "elapsed_ms": 7668
+        }
+      ]
+    }
+  ],
+  "original_test_gap": "Earlier pinned Claude Code checks suppress automatic retry by design; earlier unpinned native checks omitted metadata.user_id and did not exercise the strict session rule.",
+  "scope_limit": "Failure before generation and subsequent session reuse verified. Mid-stream interruption and signed-thinking replay were not exercised."
+}

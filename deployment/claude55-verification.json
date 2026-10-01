@@ -1,0 +1,407 @@
+{
+  "verified_at": "2026-10-01T07:18:26.819918+00:00",
+  "deployment": "new-api-patched:v1.0.0-rc.41-vibe1",
+  "backup": "/opt/new-api/backups/new-api-postgres-20261001T071404Z.dump",
+  "aliases": {
+    "claude-sonnet": "anthropic/claude-sonnet-5-5",
+    "claude-opus": "anthropic/claude-opus-5-5"
+  },
+  "enabled_channels": [
+    1,
+    5
+  ],
+  "pending_channel": {
+    "id": 7,
+    "name": "Merge 3 - raverevel",
+    "reason": "Upstream 403 vendor_access_required for Anthropic",
+    "user_accepted": true,
+    "mappings_retained": true,
+    "claude_models_excluded_from_selection": true,
+    "existing_models_enabled": true
+  },
+  "protocol": {
+    "client": "POST /v1/messages (Anthropic Messages)",
+    "upstream": "POST https://api-gateway.merge.dev/v1/anthropic/v1/messages",
+    "converter": "none",
+    "model_mapping_applied": true,
+    "full_body_passthrough": false,
+    "route_scoped_to": [
+      "claude-sonnet",
+      "claude-opus"
+    ]
+  },
+  "sources_reviewed": [
+    {
+      "kind": "Official Merge SDK source",
+      "url": "https://github.com/merge-api/merge-gateway-ai-sdk-provider",
+      "commit": "8242796d9a8feb0ddceccb62ffef8b1294c11bef",
+      "file": "src/chat/index.ts"
+    },
+    {
+      "kind": "Official Merge CLI source from published wheel",
+      "package": "merge-gateway==0.1.0",
+      "file": "mgw/harness/claude_code.py",
+      "wheel_sha256": "c6201be4a56ab3734060cd0bda1d9e19b143e3d2573a91b151460cbea04279b0"
+    },
+    {
+      "kind": "Official Merge Claude Code documentation",
+      "url": "https://docs.merge.dev/merge-gateway/coding-agents/claude-code"
+    }
+  ],
+  "source_review_limit": "Public SDK and CLI source reviewed; Merge backend server source unavailable.",
+  "production_native_tests": [
+    {
+      "channel": 1,
+      "model": "claude-sonnet",
+      "protocol": "native_anthropic",
+      "served_model": "anthropic/claude-sonnet-5-5",
+      "tool_call_count": 1,
+      "signed_thinking_blocks": 0,
+      "native_tool_replay_ok": true,
+      "sse_events": [
+        "content_block_delta",
+        "content_block_start",
+        "content_block_stop",
+        "message_delta",
+        "message_start",
+        "message_stop"
+      ],
+      "usage_fields": [
+        "cache_creation_input_tokens",
+        "cache_read_input_tokens",
+        "input_tokens",
+        "output_tokens"
+      ],
+      "success": true
+    },
+    {
+      "channel": 5,
+      "model": "claude-sonnet",
+      "protocol": "native_anthropic",
+      "served_model": "anthropic/claude-sonnet-5-5",
+      "tool_call_count": 1,
+      "signed_thinking_blocks": 0,
+      "native_tool_replay_ok": true,
+      "sse_events": [
+        "content_block_delta",
+        "content_block_start",
+        "content_block_stop",
+        "message_delta",
+        "message_start",
+        "message_stop"
+      ],
+      "usage_fields": [
+        "cache_creation_input_tokens",
+        "cache_read_input_tokens",
+        "input_tokens",
+        "output_tokens"
+      ],
+      "success": true
+    },
+    {
+      "channel": 1,
+      "model": "claude-opus",
+      "protocol": "native_anthropic",
+      "served_model": "anthropic/claude-opus-5-5",
+      "tool_call_count": 1,
+      "signed_thinking_blocks": 0,
+      "native_tool_replay_ok": true,
+      "sse_events": [
+        "content_block_delta",
+        "content_block_start",
+        "content_block_stop",
+        "message_delta",
+        "message_start",
+        "message_stop"
+      ],
+      "usage_fields": [
+        "cache_creation_input_tokens",
+        "cache_read_input_tokens",
+        "input_tokens",
+        "output_tokens"
+      ],
+      "success": true
+    },
+    {
+      "channel": 0,
+      "model": "claude-sonnet",
+      "protocol": "native_anthropic",
+      "served_model": "anthropic/claude-sonnet-5-5",
+      "tool_call_count": 1,
+      "signed_thinking_blocks": 0,
+      "native_tool_replay_ok": true,
+      "sse_events": [
+        "content_block_delta",
+        "content_block_start",
+        "content_block_stop",
+        "message_delta",
+        "message_start",
+        "message_stop"
+      ],
+      "usage_fields": [
+        "cache_creation_input_tokens",
+        "cache_read_input_tokens",
+        "input_tokens",
+        "output_tokens"
+      ],
+      "success": true
+    },
+    {
+      "channel": 5,
+      "model": "claude-opus",
+      "protocol": "native_anthropic",
+      "served_model": "anthropic/claude-opus-5-5",
+      "tool_call_count": 1,
+      "signed_thinking_blocks": 0,
+      "native_tool_replay_ok": true,
+      "sse_events": [
+        "content_block_delta",
+        "content_block_start",
+        "content_block_stop",
+        "message_delta",
+        "message_start",
+        "message_stop"
+      ],
+      "usage_fields": [
+        "cache_creation_input_tokens",
+        "cache_read_input_tokens",
+        "input_tokens",
+        "output_tokens"
+      ],
+      "success": true
+    },
+    {
+      "channel": 0,
+      "model": "claude-opus",
+      "protocol": "native_anthropic",
+      "served_model": "anthropic/claude-opus-5-5",
+      "tool_call_count": 1,
+      "signed_thinking_blocks": 0,
+      "native_tool_replay_ok": true,
+      "sse_events": [
+        "content_block_delta",
+        "content_block_start",
+        "content_block_stop",
+        "message_delta",
+        "message_start",
+        "message_stop"
+      ],
+      "usage_fields": [
+        "cache_creation_input_tokens",
+        "cache_read_input_tokens",
+        "input_tokens",
+        "output_tokens"
+      ],
+      "success": true
+    }
+  ],
+  "production_claude_code_tests": [
+    {
+      "channel": 1,
+      "model": "claude-sonnet",
+      "client": "Claude Code 2.1.286",
+      "exit_code": 0,
+      "subtype": "success",
+      "is_error": false,
+      "tools": [
+        "Read",
+        "Edit",
+        "Bash"
+      ],
+      "turns": 4,
+      "permission_denial_count": 0,
+      "partial_stream_events": 23,
+      "success": true,
+      "edited_code_test_passed": true
+    },
+    {
+      "channel": 1,
+      "model": "claude-opus",
+      "client": "Claude Code 2.1.286",
+      "exit_code": 0,
+      "subtype": "success",
+      "is_error": false,
+      "tools": [
+        "Read",
+        "Edit",
+        "Bash"
+      ],
+      "turns": 4,
+      "permission_denial_count": 0,
+      "partial_stream_events": 23,
+      "success": true,
+      "edited_code_test_passed": true
+    },
+    {
+      "channel": 5,
+      "model": "claude-sonnet",
+      "client": "Claude Code 2.1.286",
+      "exit_code": 0,
+      "subtype": "success",
+      "is_error": false,
+      "tools": [
+        "Read",
+        "Edit",
+        "Bash"
+      ],
+      "turns": 4,
+      "permission_denial_count": 0,
+      "partial_stream_events": 23,
+      "success": true,
+      "edited_code_test_passed": true
+    },
+    {
+      "channel": 5,
+      "model": "claude-opus",
+      "client": "Claude Code 2.1.286",
+      "exit_code": 0,
+      "subtype": "success",
+      "is_error": false,
+      "tools": [
+        "Read",
+        "Edit",
+        "Bash"
+      ],
+      "turns": 4,
+      "permission_denial_count": 0,
+      "partial_stream_events": 23,
+      "success": true,
+      "edited_code_test_passed": true
+    }
+  ],
+  "existing_model_regression_tests": [
+    {
+      "channel": 7,
+      "model": "gemini-flash",
+      "chat_tool_calls": 1,
+      "thought_signature": false,
+      "chat_replay_ok": true,
+      "stream_code_ok": true,
+      "success": true
+    },
+    {
+      "channel": 7,
+      "model": "grok",
+      "chat_tool_calls": 1,
+      "thought_signature": false,
+      "chat_replay_ok": true,
+      "stream_code_ok": true,
+      "success": true
+    }
+  ],
+  "staging_access_tests": [
+    {
+      "channel": 1,
+      "model": "claude-sonnet",
+      "protocol": "native_anthropic",
+      "served_model": "anthropic/claude-sonnet-5-5",
+      "tool_call_count": 1,
+      "signed_thinking_blocks": 0,
+      "native_tool_replay_ok": true,
+      "sse_events": [
+        "content_block_delta",
+        "content_block_start",
+        "content_block_stop",
+        "message_delta",
+        "message_start",
+        "message_stop"
+      ],
+      "usage_fields": [
+        "cache_creation_input_tokens",
+        "cache_read_input_tokens",
+        "input_tokens",
+        "output_tokens"
+      ],
+      "success": true
+    },
+    {
+      "channel": 5,
+      "model": "claude-sonnet",
+      "protocol": "native_anthropic",
+      "served_model": "anthropic/claude-sonnet-5-5",
+      "tool_call_count": 1,
+      "signed_thinking_blocks": 0,
+      "native_tool_replay_ok": true,
+      "sse_events": [
+        "content_block_delta",
+        "content_block_start",
+        "content_block_stop",
+        "message_delta",
+        "message_start",
+        "message_stop"
+      ],
+      "usage_fields": [
+        "cache_creation_input_tokens",
+        "cache_read_input_tokens",
+        "input_tokens",
+        "output_tokens"
+      ],
+      "success": true
+    },
+    {
+      "channel": 7,
+      "model": "claude-sonnet",
+      "protocol": "native_anthropic",
+      "success": false,
+      "error": "HTTP 403: {\"error\":{\"type\":\"vendor_access_required\",\"message\":\"Anthropic models are not enabled for this organization. Contact support@***.dev, or use the in-app chat, to request access. (request id: 202610010705508860715958268d9d68OnWONhO)\"},\"type\":\"error\"}"
+    },
+    {
+      "channel": 7,
+      "model": "claude-opus",
+      "protocol": "native_anthropic",
+      "success": false,
+      "error": "HTTP 403: {\"error\":{\"type\":\"vendor_access_required\",\"message\":\"Anthropic models are not enabled for this organization. Contact support@***.dev, or use the in-app chat, to request access. (request id: 202610010705514962365498268d9d6U9GYS9Bd)\"},\"type\":\"error\"}"
+    },
+    {
+      "channel": 1,
+      "model": "claude-opus",
+      "protocol": "native_anthropic",
+      "served_model": "anthropic/claude-opus-5-5",
+      "tool_call_count": 1,
+      "signed_thinking_blocks": 0,
+      "native_tool_replay_ok": true,
+      "sse_events": [
+        "content_block_delta",
+        "content_block_start",
+        "content_block_stop",
+        "message_delta",
+        "message_start",
+        "message_stop"
+      ],
+      "usage_fields": [
+        "cache_creation_input_tokens",
+        "cache_read_input_tokens",
+        "input_tokens",
+        "output_tokens"
+      ],
+      "success": true
+    },
+    {
+      "channel": 5,
+      "model": "claude-opus",
+      "protocol": "native_anthropic",
+      "served_model": "anthropic/claude-opus-5-5",
+      "tool_call_count": 1,
+      "signed_thinking_blocks": 0,
+      "native_tool_replay_ok": true,
+      "sse_events": [
+        "content_block_delta",
+        "content_block_start",
+        "content_block_stop",
+        "message_delta",
+        "message_start",
+        "message_stop"
+      ],
+      "usage_fields": [
+        "cache_creation_input_tokens",
+        "cache_read_input_tokens",
+        "input_tokens",
+        "output_tokens"
+      ],
+      "success": true
+    }
+  ],
+  "thinking_signature_limit": "No thinking block was emitted in these simple tests; native signed-thinking replay was not exercised.",
+  "cli_exercise": "Official Claude Code 2.1.286 read add.py, edited subtraction to addition, ran python3 add.py and passed the assertion.",
+  "request_routing_evidence": "Production consumption records for both Claude aliases only appeared on channels 1 and 5; channel 7 has no Claude abilities or advertised Claude models."
+}

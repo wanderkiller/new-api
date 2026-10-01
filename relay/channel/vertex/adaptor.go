@@ -124,9 +124,29 @@ func (a *Adaptor) Init(info *relaycommon.RelayInfo) {
 		// open source models
 		strings.Contains(info.UpstreamModelName, "-maas") {
 		a.RequestMode = RequestModeOpenSource
+	} else if info.ChannelOtherSettings.VertexGeminiOpenAICompatEnabled &&
+		isVertexGeminiOpenAICompatibleModel(info) {
+		a.RequestMode = RequestModeOpenSource
 	} else {
 		a.RequestMode = RequestModeGemini
 	}
+}
+
+func isVertexGeminiModel(modelName string) bool {
+	modelName = strings.TrimPrefix(strings.ToLower(modelName), "google/")
+	return strings.HasPrefix(modelName, "gemini")
+}
+
+// isVertexGeminiOpenAICompatibleModel reports whether this Gemini request
+// should be rerouted through Vertex's OpenAI-compatible endpoint. Models
+// carrying a thinking/effort model-name modifier are excluded. As of the
+// rc.31 relay-conversion refactor, ApplyReasoningModelSuffix (relay entry
+// layer, runs before Adaptor.Init) already strips that modifier out of
+// UpstreamModelName and records it on info.ReasoningConversion instead — so
+// the modifier can no longer be detected by re-parsing the (now-clean) model
+// name here; check the carried state instead.
+func isVertexGeminiOpenAICompatibleModel(info *relaycommon.RelayInfo) bool {
+	return isVertexGeminiModel(info.UpstreamModelName) && info.ReasoningState() == nil
 }
 
 func (a *Adaptor) getRequestUrl(info *relaycommon.RelayInfo, modelName, suffix string) (string, error) {
@@ -308,6 +328,10 @@ func (a *Adaptor) ConvertOpenAIRequest(c *gin.Context, info *relaycommon.RelayIn
 		c.Set("request_model", request.Model)
 		return geminiRequest, nil
 	} else if a.RequestMode == RequestModeOpenSource {
+		if info.ChannelOtherSettings.VertexGeminiOpenAICompatEnabled &&
+			isVertexGeminiOpenAICompatibleModel(info) {
+			request.Model = "google/" + strings.TrimPrefix(info.UpstreamModelName, "google/")
+		}
 		return request, nil
 	}
 	return nil, errors.New("unsupported request mode")

@@ -278,6 +278,7 @@ export const channelFormSchema = z
     is_enterprise_account: z.boolean().optional(), // OpenRouter specific
     vertex_key_type: z.enum(['json', 'api_key']).optional(), // Vertex AI specific
     vertex_project_id: z.string().optional(), // Vertex AI specific (api_key mode only)
+    vertex_gemini_openai_compat_enabled: z.boolean().optional(), // Vertex AI specific
     aws_key_type: z.enum(['ak_sk', 'api_key']).optional(), // AWS specific
     aws_api_type: z.enum(['invoke_model', 'mantle']).optional(),
     azure_responses_version: z.string().optional(), // Azure specific
@@ -472,6 +473,7 @@ export const CHANNEL_FORM_DEFAULT_VALUES: ChannelFormValues = {
   is_enterprise_account: false,
   vertex_key_type: 'json',
   vertex_project_id: '',
+  vertex_gemini_openai_compat_enabled: false,
   aws_key_type: 'ak_sk',
   aws_api_type: 'invoke_model',
   azure_responses_version: '',
@@ -548,6 +550,7 @@ export function transformChannelToFormDefaults(
   // Parse type-specific settings from settings field
   let vertexKeyType: 'json' | 'api_key' = 'json'
   let vertexProjectId = ''
+  let vertexGeminiOpenAICompatEnabled = false
   let azureResponsesVersion = ''
   let isEnterpriseAccount = false
   let awsKeyType: 'ak_sk' | 'api_key' = 'ak_sk'
@@ -571,6 +574,8 @@ export function transformChannelToFormDefaults(
       const parsed = JSON.parse(channel.settings)
       vertexKeyType = parsed.vertex_key_type || 'json'
       vertexProjectId = parsed.vertex_project_id || ''
+      vertexGeminiOpenAICompatEnabled =
+        parsed.vertex_gemini_openai_compat_enabled === true
       azureResponsesVersion = parsed.azure_responses_version || ''
       isEnterpriseAccount = parsed.openrouter_enterprise === true
       awsKeyType = parsed.aws_key_type || 'ak_sk'
@@ -634,6 +639,7 @@ export function transformChannelToFormDefaults(
     is_enterprise_account: isEnterpriseAccount,
     vertex_key_type: vertexKeyType,
     vertex_project_id: vertexProjectId,
+    vertex_gemini_openai_compat_enabled: vertexGeminiOpenAICompatEnabled,
     azure_responses_version: azureResponsesVersion,
     aws_key_type: awsKeyType,
     aws_api_type: awsApiType,
@@ -724,9 +730,12 @@ function buildSettingsJSON(formData: ChannelFormValues): string {
     } else {
       delete settingsObj.vertex_project_id
     }
+    settingsObj.vertex_gemini_openai_compat_enabled =
+      formData.vertex_gemini_openai_compat_enabled === true
   } else {
     delete settingsObj.vertex_key_type
     delete settingsObj.vertex_project_id
+    delete settingsObj.vertex_gemini_openai_compat_enabled
   }
 
   // Add azure_responses_version for Azure channels (type 3)

@@ -118,3 +118,35 @@ func TestGeminiOpenAICompatibilityPreservesThoughtSignatureResponse(t *testing.T
 	require.Nil(t, apiErr)
 	assert.Equal(t, upstreamResponse, recorder.Body.String())
 }
+
+func TestConvertOpenAIRequestGeminiOpenAICompatibilitySignsUnsignedToolCallSteps(t *testing.T) {
+	signed := `[{"id":"call_a","type":"function","function":{"name":"lookup","arguments":"{}"},"extra_content":{"google":{"thought_signature":"real-signature"}}}]`
+	unsigned := `[{"id":"call_b","type":"function","function":{"name":"lookup","arguments":"{}"}},{"id":"call_c","type":"function","function":{"name":"lookup","arguments":"{}"}}]`
+	request := &dto.GeneralOpenAIRequest{
+		Model: "gemini-flash",
+		Messages: []dto.Message{
+			{Role: "user", Content: "question"},
+			{Role: "assistant", ToolCalls: []byte(signed)},
+			{Role: "tool", ToolCallId: "call_a", Content: "{}"},
+			{Role: "assistant", ToolCalls: []byte(unsigned)},
+			{Role: "tool", ToolCallId: "call_b", Content: "{}"},
+			{Role: "tool", ToolCallId: "call_c", Content: "{}"},
+		},
+	}
+	info := &relaycommon.RelayInfo{ChannelMeta: &relaycommon.ChannelMeta{
+		UpstreamModelName: "gemini-3.8-flash",
+		ChannelOtherSettings: dto.ChannelOtherSettings{
+			VertexGeminiOpenAICompatEnabled: true,
+		},
+	}}
+	adaptor := &Adaptor{}
+	adaptor.Init(info)
+
+	_, err := adaptor.ConvertOpenAIRequest(nil, info, request)
+	require.NoError(t, err)
+
+	assert.JSONEq(t, signed, string(request.Messages[1].ToolCalls))
+	assert.JSONEq(t,
+		`[{"id":"call_b","type":"function","function":{"name":"lookup","arguments":"{}"},"extra_content":{"google":{"thought_signature":"`+thoughtSignatureBypassValue+`"}}},{"id":"call_c","type":"function","function":{"name":"lookup","arguments":"{}"}}]`,
+		string(request.Messages[3].ToolCalls))
+}

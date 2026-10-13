@@ -102,7 +102,14 @@ func RelayErrorHandler(ctx context.Context, resp *http.Response, showBodyWhenFai
 		return fmt.Errorf("bad response status code %d, message: %s, body: %s", resp.StatusCode, message, responseBodyText)
 	}
 
-	err = common.Unmarshal(responseBody, &errResponse)
+	errorBody := responseBody
+	// Google's streaming endpoints (Vertex streamGenerateContent and its
+	// OpenAI-compatible route) wrap the error object in a JSON array.
+	var wrapped []json.RawMessage
+	if common.GetJsonType(responseBody) == "array" && common.Unmarshal(responseBody, &wrapped) == nil && len(wrapped) > 0 {
+		errorBody = wrapped[0]
+	}
+	err = common.Unmarshal(errorBody, &errResponse)
 	if err != nil {
 		if showBodyWhenFail {
 			newApiErr.Err = buildErrWithBody("")

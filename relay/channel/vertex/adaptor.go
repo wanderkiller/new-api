@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/QuantumNous/new-api/common"
@@ -147,6 +148,54 @@ func isVertexGeminiModel(modelName string) bool {
 // name here; check the carried state instead.
 func isVertexGeminiOpenAICompatibleModel(info *relaycommon.RelayInfo) bool {
 	return isVertexGeminiModel(info.UpstreamModelName) && info.ReasoningState() == nil
+}
+
+// thoughtSignatureBypassValue is Google's documented placeholder for a function
+// call whose thought signature is unavailable; the native Gemini conversion
+// attaches the same value (relaykit shared/gemini ThoughtSignatureBypassValue).
+const thoughtSignatureBypassValue = "context_engineering_is_the_way_to_go"
+
+// attachThoughtSignatureBypass gives each replayed assistant tool-call step a
+// thought signature on Vertex's OpenAI-compatible endpoint, which rejects a
+// step without one ("Function call is missing a thought_signature"). Steps
+// produced by another channel of the same model carry no signature Vertex can
+// use, so a conversation that fails over to this channel would otherwise fail.
+// As in the native conversion, only the first call of a step needs it, and a
+// step that already carries a signature is left untouched.
+func attachThoughtSignatureBypass(request *dto.GeneralOpenAIRequest) {
+	for i := range request.Messages {
+		message := &request.Messages[i]
+		if message.Role != "assistant" || len(message.ToolCalls) == 0 {
+			continue
+		}
+		var toolCalls []map[string]any
+		if common.Unmarshal(message.ToolCalls, &toolCalls) != nil || len(toolCalls) == 0 {
+			continue
+		}
+		signed := slices.ContainsFunc(toolCalls, func(toolCall map[string]any) bool {
+			extra, _ := toolCall["extra_content"].(map[string]any)
+			google, _ := extra["google"].(map[string]any)
+			signature, _ := google["thought_signature"].(string)
+			return signature != ""
+		})
+		if signed {
+			continue
+		}
+		extra, _ := toolCalls[0]["extra_content"].(map[string]any)
+		if extra == nil {
+			extra = map[string]any{}
+			toolCalls[0]["extra_content"] = extra
+		}
+		google, _ := extra["google"].(map[string]any)
+		if google == nil {
+			google = map[string]any{}
+			extra["google"] = google
+		}
+		google["thought_signature"] = thoughtSignatureBypassValue
+		if raw, err := common.Marshal(toolCalls); err == nil {
+			message.ToolCalls = raw
+		}
+	}
 }
 
 func (a *Adaptor) getRequestUrl(info *relaycommon.RelayInfo, modelName, suffix string) (string, error) {
@@ -331,6 +380,9 @@ func (a *Adaptor) ConvertOpenAIRequest(c *gin.Context, info *relaycommon.RelayIn
 		if info.ChannelOtherSettings.VertexGeminiOpenAICompatEnabled &&
 			isVertexGeminiOpenAICompatibleModel(info) {
 			request.Model = "google/" + strings.TrimPrefix(info.UpstreamModelName, "google/")
+			if model_setting.GetGeminiSettings().FunctionCallThoughtSignatureEnabled {
+				attachThoughtSignatureBypass(request)
+			}
 		}
 		return request, nil
 	}

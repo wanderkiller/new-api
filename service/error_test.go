@@ -121,6 +121,21 @@ func TestRelayErrorHandlerKeepsOpenAIErrorMessage(t *testing.T) {
 	require.Equal(t, message, newAPIError.Error())
 }
 
+func TestRelayErrorHandlerUnwrapsGoogleArrayErrorBody(t *testing.T) {
+	message := "Function call is missing a thought_signature in functionCall parts."
+	body := `[{"error":{"code":400,"message":"` + message + `","status":"INVALID_ARGUMENT"}}]`
+	resp := &http.Response{
+		StatusCode: http.StatusBadRequest,
+		Body:       io.NopCloser(strings.NewReader(body)),
+	}
+
+	newAPIError := RelayErrorHandler(context.Background(), resp, false)
+
+	require.NotNil(t, newAPIError)
+	require.Equal(t, message, newAPIError.Error())
+	require.Equal(t, http.StatusBadRequest, newAPIError.StatusCode)
+}
+
 func TestRelayErrorHandlerKeepsInvalidJSONBodyInDebugLog(t *testing.T) {
 	withDebugEnabled(t, true)
 

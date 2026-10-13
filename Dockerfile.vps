@@ -1,4 +1,4 @@
-FROM new-api-patched:v1.0.0-rc.37-vibe1
+FROM new-api-patched:v1.0.0-rc.41-vibe2
 COPY new-api /new-api
 COPY LICENSE NOTICE THIRD-PARTY-LICENSES.md /licenses/
-LABEL org.opencontainers.image.version="v1.0.0-rc.41-vibe1" org.opencontainers.image.source="https://github.com/QuantumNous/new-api" local.vertex-patch="deploy-rc37 ported and verified"
+LABEL org.opencontainers.image.version="v1.0.0-rc.44-vibe1" org.opencontainers.image.source="https://github.com/QuantumNous/new-api" local.vertex-patch="rc44 + vertex compat (dfbf2c1) + thought-signature bypass (91ca67f)"

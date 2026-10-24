@@ -4,7 +4,8 @@ key=subprocess.check_output(['sudo','-n','docker','exec','new-api-postgres','psq
 
 def run(pair):
  cid,model=pair;result={'channel':cid,'model':model,'protocol':'native_anthropic'}
- headers={'Authorization':'Bearer sk-'+key+(f'-{cid}' if cid else ''),'anthropic-version':'2023-06-01','anthropic-beta':'claude-code-20250219','User-Agent':'claude-code/native-protocol-test'}
+ headers={'Authorization':'Bearer sk-'+key+(f'-{cid}' if cid else ''),'anthropic-version':'2023-06-01','User-Agent':'claude-code/native-protocol-test'}
+ if cid in (1,5,7):headers['anthropic-beta']='claude-code-20250219'  # Merge channels only: Anthropic rejects this beta on API keys with a bogus 'credit balance too low'
  body={'model':model,'max_tokens':4096,'stream':True,'thinking':{'type':'adaptive'},'output_config':{'effort':'medium'},'system':[{'type':'text','text':'You are a coding assistant. Use tools to inspect code before giving a final answer.','cache_control':{'type':'ephemeral'}}],'messages':[{'role':'user','content':'Call inspect_code with this Python code: def add(a,b): return a+b. Do not claim you inspected it without calling the tool. After the tool returns valid=true, reply exactly CODE_OK.'}],'tools':[{'name':'inspect_code','description':'Inspect Python addition code for correctness.','input_schema':{'type':'object','properties':{'code':{'type':'string'}},'required':['code']},'cache_control':{'type':'ephemeral'}}]}
  if args.session_id:body['metadata']={'user_id':args.session_id}
  def stream(b):
